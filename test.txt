@@ -1,0 +1,98 @@
+#ifndef SAT_H
+#define SAT_H
+	
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "picosat/picosat.h"
+
+
+#define UNKNOWN         0
+#define SATISFIABLE     10
+#define UNSATISFIABLE   20
+
+typedef struct PicoSAT Solver;
+
+#define init_solver picosat_init
+#define reset_solver picosat_reset
+
+#define add_literal picosat_add
+#define add_clause picosat_add_lits
+#define solve picosat_sat
+
+
+void import_cnf(Solver* solver, char* filename){
+
+	// Open input file for reading
+	FILE* file = fopen(filename, "a+");
+	
+	if(!file) {
+		fprintf(stderr, "Could not open file\n");
+		exit(EXIT_FAILURE);
+	}
+
+	fseek(file, -1, SEEK_END);
+
+	if(fgetc(file) != '\n') {
+		fprintf(file, "\n");
+	}
+
+	rewind(file);
+
+	// Read literals from input file
+	int literal;
+	while(fscanf(file, "%d", &literal) != EOF){
+		
+		// if literal is 0 terminate the clause
+		if(literal == 0) add_literal(solver, 0);
+		
+		// else add literal to current clause
+		else add_literal(solver, literal);
+	
+	}
+}
+
+void copy_file(char* file_path){
+	FILE* input = fopen(file_path, "r");
+	FILE* temp = fopen("temp.cnf", "w");
+
+	char buffer[1024];
+	size_t bytesRead;
+
+	while((bytesRead = fread(buffer, 1, sizeof(buffer), input)) > 0){
+		fwrite(buffer, 1, bytesRead, temp);
+	}
+
+	fclose(input);
+	fclose(temp);
+
+}
+
+void add_clause_file(int value){
+	FILE* temp = fopen("temp.cnf", "a");
+
+	if(value == 0) {
+		fprintf(temp, "0\n");	
+	}
+	else fprintf(temp, "%d ", value);
+
+	fclose(temp);
+}
+
+
+void output_res(int value, char* file_path) {
+	FILE* output = fopen(file_path, "a");
+
+	fprintf(output, "%d ", value);
+
+	fclose(output);
+}
+
+
+
+
+
+
+
+#endif
